@@ -24,7 +24,7 @@
         "flat" : ((200,400), [(80,200),(81,200),(82,200),(83,200),(84,200),(85,200),(86,200),(87,200), (89,200),(90,200),(91,200),(92,200),(93,200),(97,200),(98,200),(99,200),(106,200),(107,200),(108,200),(109,200),(110,200),(111,200),(112,200),(114,200),(115,200),(116,200),(117,200),(118,200)])
     }
 
-### NUMBER_OF_PROCESS-1 need to divisible by the first number after the initialisation name, for example:
+### NUMBER_OF_PROCESS-1 need to be divisible by the first size number after the initialisation name, for example:
 
     mpiexec -n 6 python version1.py blinker
     mpiexec -n 3 python version1.py toad
