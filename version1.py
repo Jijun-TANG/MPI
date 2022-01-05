@@ -27,7 +27,9 @@ mpiexec -n 11 python version1.py glider
 mpiexec -n 21 python version1.py glider
 mpiexec -n 26 python version1.py glider
 mpiexec -n 6 python version1.py space_ship
+mpiexec -n 11 python version1.py die_hard
 mpiexec -n 18 python version1.py pulsar
+mpiexec -n 21 python version1.py u
 mpiexec -n 21 python version1.py flat
 """
 
@@ -49,7 +51,7 @@ dico_patterns = { # Dimension et pattern dans un tuple
     }
 
 
-if len(sys.argv)>1 and len(sys.argv[1])>1:
+if len(sys.argv)>1:
     choice = sys.argv[1]
 else:
     choice='space_ship'
@@ -63,18 +65,18 @@ comm_couple = MPI.COMM_WORLD.Dup()
 rank_couple = comm_couple.rank
 size_couple = comm_couple.size
 
-
 nombre_cells_glob = dim[0]*dim[1]
 nombre_ligne_mat_loc = dim[0]//(np.sqrt(size_couple-1).astype(int))
 nombre_col_mat_loc = dim[1]//(np.sqrt(size_couple-1).astype(int))
 
 # Ouverture d'un fichier nom unique mode simple
-fileName = f"sortie{rank_couple:03d}.txt"
-file = open(fileName, mode="w")
+#fileName = f"sortie{rank_couple:03d}.txt"
+#file = open(fileName, mode="w")
 
 # séparation entre le processus qui affiche et les processus qui calculent
 global_grille=None
-if rank_couple == 0 :
+
+if rank_couple == 0:
     status_couple = 0
     
     init_pattern = dico_patterns[choice]
@@ -93,7 +95,7 @@ if rank_couple == 0 :
             diff = global_grille.compute_next_iteration()
             appli.draw(diff)
 else :
-	status_couple = 1
+    status_couple = 1
 comm = comm_couple.Split(status_couple,rank_couple)
 rank = comm.Get_rank()
 size = comm.Get_size()
@@ -103,7 +105,6 @@ if rank_couple==0:
     comm_couple.send(global_grille,dest=1,tag=0)
 elif rank_couple==1:
     global_grille=comm_couple.recv(source=0,tag=0)
-
 #liste de nombre de processus qui peut potentiellement former des sous matrices en carré au cours de calcul parallèle,
 #si le nombre de processus donné n'est pas dans cette liste, on fait un algo universel pour n'importe quelle nombre de processus
 #ici on traite les distributions importantes au dessous qui peuvent potentiellement convenir à notre taille du problème
@@ -144,10 +145,17 @@ else:#si le nbr de processus est insuffisant pour diviser la grilles en block, o
             
             if rank==0:
                 sendbuff=global_grille.cells
+                #print("grille taille", global_grille.dimensions)
                 sendbuff=sendbuff.flatten()
-
-            comm.Scatterv(sendbuff,recvbuf,root=0)
-            
+                #print("sendbuff: ", sendbuff.shape)
+                #print(sendbuff)
+            #print("recvbuf: ", recvbuf.shape)
+            #print(recvbuf)
+            try:
+                comm.Scatterv(sendbuff,recvbuf,root=0)
+            except:
+                print("At ", rank, "problem with comm.Scatterv")
+                exit()
             vector_up=np.empty((1,dim[1]),dtype=np.uint8)
             vector_down=np.empty((1,dim[1]),dtype=np.uint8)
             vu=None
